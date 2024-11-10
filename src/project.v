@@ -29,7 +29,7 @@ module tt_um_tommythorn_cgates (
 
    assign uo_out = {RTBDc, RTBDl, R16c, R16l, R4c, R4l, Qc, Ql};
    latchcgate latchcgate_inst(rst_n, A, B, Ql);
-   combcgate combcgate_inst(rst_n, A, B, Qc);
+   combcgate0 combcgate_inst(rst_n, A, B, Qc);
 
    latchring #(4) r4li(rst_n, R4l);
    combring  #(4) r4ci(rst_n, R4c);
@@ -43,15 +43,42 @@ module latchcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg
 `ifdef TEST
    always @* if (!rst_n) Q = q0; else if (A == B) Q = #3 A;
 `else
-   always @* if (!rst_n) Q = q0; else if (A == B) Q = A;
+   always_latch if (!rst_n) Q = q0; else if (A == B) Q = A;
 `endif
 endmodule
 
-module combcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg Q);
+module combcgate0(input rst_n, input A, input B, output wire Q);
 `ifdef TEST
-   always @* Q = #3 rst_n ? A & B | (A | B) & Q : q0;
+   reg Qr;
+   assign Q = Qr;
+   always @* Qr = #3 rst_n ? A & B | (A | B) & Qr : 0;
 `else
-   always @* Q = rst_n ? A & B | (A | B) & Q : q0;
+   // (A & B | (A | B) & Q) & rst_n
+   // ==
+   // Q = (A1 | A2) & rst_n
+   // A1 = A & B
+   // A2 = (A | B) & Q
+
+   wire A2;
+   sky130_fd_sc_hd__o21a_1(Q, A & B, A2, rst_n);
+   sky130_fd_sc_hd__o21a_1(A2, A, B, Q);
+`endif
+endmodule
+
+module combcgate1(input rst_n, input A, input B, output wire Q);
+`ifdef TEST
+   reg Qr;
+   assign Q = Qr;
+   always @* Qr = #3 rst_n ? A & B | (A | B) & Qr : 0;
+`else
+   // A & B | (A | B) & Q | !rst_n
+   // ==
+   // Q = (A & B) | A1 | !rst_n
+   // A1 = (A | B) & Q
+
+   wire A1;
+   sky130_fd_sc_hd__a211o_1(Q, A, B, A1, !rst_n);
+   sky130_fd_sc_hd__o21a_1(A1, A, B, Q);
 `endif
 endmodule
 
@@ -72,10 +99,16 @@ module combring#(parameter N = 3) (input rst_n, output Q);
    assign Q = o[0];
    genvar	i;
    for (i = 0; i < N; i = i + 1) begin
-      latchcgate #(i == 0) combcgate_inst(.rst_n(rst_n),
-				  .A(o[(i + N - 1) % N]),
-				  .B(!o[(i + 1) % N]),
-				  .Q(o[i]));
+      if (i == 0)
+	combcgate1 combcgate_inst(.rst_n(rst_n),
+				   .A(o[(i + N - 1) % N]),
+				   .B(!o[(i + 1) % N]),
+				   .Q(o[i]));
+      else
+	combcgate0 combcgate_inst(.rst_n(rst_n),
+				   .A(o[(i + N - 1) % N]),
+				   .B(!o[(i + 1) % N]),
+				   .Q(o[i]));
    end
 endmodule
 
