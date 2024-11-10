@@ -25,9 +25,8 @@ module tt_um_tommythorn_cgates (
 
    wire	A = ui_in[0];
    wire	B = ui_in[1];
-   wire	Ql, Qc, R4l, R4c, R16l, R16c, RTBDl, RTBDc;
+   wire	Ql, Qc, R4l, R4c, R16l, R16c, RBigl, RBigc;
 
-   assign uo_out = {RTBDc, RTBDl, R16c, R16l, R4c, R4l, Qc, Ql};
    latchcgate latchcgate_inst(rst_n, A, B, Ql);
    combcgate0 combcgate_inst(rst_n, A, B, Qc);
 
@@ -35,8 +34,20 @@ module tt_um_tommythorn_cgates (
    combring  #(4) r4ci(rst_n, R4c);
    latchring #(16) r16li(rst_n, R16l);
    combring  #(16) r16ci(rst_n, R16c);
-   latchring #(64) rtbdli(rst_n, RTBDl);
-   combring  #(64) rtbdci(rst_n, RTBDc);
+   latchring #(64) rtbdli(rst_n, RBigl);
+   combring  #(64) rtbdci(rst_n, RBigc);
+
+   // The Cgate rings pulses are very tiny, so we add a toggle FF for
+   // each so be able to observe it.
+   reg	R4lt, R4ct, R16lt, R16ct, RBiglt, RBigct;
+   always @(posedge R4l or negedge rst_n) if (!rst_n) R4lt <= 0; else R4lt <= !R4lt;
+   always @(posedge R4c or negedge rst_n) if (!rst_n) R4ct <= 0; else R4ct <= !R4ct;
+   always @(posedge R16l or negedge rst_n) if (!rst_n) R16lt <= 0; else R16lt <= !R16lt;
+   always @(posedge R16c or negedge rst_n) if (!rst_n) R16ct <= 0; else R16ct <= !R16ct;
+   always @(posedge RBigl or negedge rst_n) if (!rst_n) RBiglt <= 0; else RBiglt <= !RBiglt;
+   always @(posedge RBigc or negedge rst_n) if (!rst_n) RBigct <= 0; else RBigct <= !RBigct;
+
+   assign uo_out = {RBigct, RBiglt, R16ct, R16lt, R4ct, R4lt, Qc, Ql};
 endmodule
 
 module latchcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg Q);
