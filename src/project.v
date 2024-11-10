@@ -80,7 +80,7 @@ module combcgate1(input rst_n, input A, input B, output wire Q);
 `ifdef TEST
    reg Qr;
    assign Q = Qr;
-   always @* Qr = #3 rst_n ? A & B | (A | B) & Qr : 0;
+   always @* Qr = #3 rst_n ? A & B | (A | B) & Qr : 1;
 `else
    // A & B | (A | B) & Q | !rst_n
    // ==
