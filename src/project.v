@@ -28,7 +28,7 @@ module tt_um_tommythorn_cgates (
    wire	Ql, Qc, R4l, R4c, R16l, R16c, RBigl, RBigc;
 
    latchcgate latchcgate_inst(rst_n, A, B, Ql);
-   combcgate0 combcgate_inst(rst_n, A, B, Qc);
+   combcgate1 combcgate_inst(rst_n, A, B, Qc);
 
    latchring #(4) r4li(rst_n, R4l);
    combring  #(4) r4ci(rst_n, R4c);
