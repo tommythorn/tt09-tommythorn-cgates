@@ -40,11 +40,19 @@ module tt_um_tommythorn_cgates (
 endmodule
 
 module latchcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg Q);
+`ifdef TEST
    always @* if (!rst_n) Q = q0; else if (A == B) Q = #3 A;
+`else
+   always @* if (!rst_n) Q = q0; else if (A == B) Q = A;
+`endif
 endmodule
 
 module combcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg Q);
+`ifdef TEST
    always @* Q = #3 rst_n ? A & B | (A | B) & Q : q0;
+`else
+   always @* Q = rst_n ? A & B | (A | B) & Q : q0;
+`endif
 endmodule
 
 module latchring #(parameter N = 3) (input rst_n, output Q);
@@ -71,6 +79,7 @@ module combring#(parameter N = 3) (input rst_n, output Q);
    end
 endmodule
 
+`ifdef TEST
 module tb;
    reg  [7:0] ui_in = 0;
    wire [7:0] uo_out;
@@ -99,3 +108,4 @@ module tb;
       #1000 $finish;
    end
 endmodule
+`endif
