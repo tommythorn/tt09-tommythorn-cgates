@@ -35,8 +35,8 @@ module tt_um_tommythorn_cgates (
    combring  #(4) r4ci(rst_n, R4c);
    latchring #(16) r16li(rst_n, R16l);
    combring  #(16) r16ci(rst_n, R16c);
-   latchring #(16) rtbdli(rst_n, RTBDl);
-   combring  #(16) rtbdci(rst_n, RTBDc);
+   latchring #(64) rtbdli(rst_n, RTBDl);
+   combring  #(64) rtbdci(rst_n, RTBDc);
 endmodule
 
 module latchcgate #(parameter q0 = 0) (input rst_n, input A, input B, output reg Q);
